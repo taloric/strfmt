@@ -9,7 +9,7 @@ import (
 
 const (
 	format_student = "[{Id}]-Student Info:name-[{Name}],gender-[{Gender}],age-[{Age}],birthday-[{BirthDay}],is graduate-[{IsGraduate}]"
-	format_people  = "[{Id}]-People Info:name-[{Name}],gender-[{Gender}],age-[{Age}],birthday-[{BirthDay}]"
+	format_people  = "[{Id}]-People Info:name-[{Name}],gender-[{Gender}],age-[{Age}],birthday-[{BirthDay:2006/01/02}]"
 
 	format_today          = "Today is a {0} day"
 	format_today_rightpad = "Today is a {0,-20} day"
@@ -22,6 +22,15 @@ const (
 	format_error_only_right_brace        = "Today is } Day"
 	format_error_without_complete_format = "Today is {0, Day"
 	format_error_index_out_of_range      = "Today is {1} Day"
+
+	format_time_normal = "Current Time is {0:2006-01-02 15:04:05 Mon}"
+	format_time_short  = "Current Time is {0:3:04PM}"
+	format_time_map    = "Current Time is {day:2006-01-02 15:04:05 Mon}"
+
+	//maybe should support this format?
+	format_time_error_format       = "Current Time is {0:yyyy-mm}"
+	format_time_error_format_lost  = "Current Time is {0:}"
+	format_time_error_format_wrong = "Current Time is {0:2003-02-02}"
 )
 
 type People struct {
@@ -139,32 +148,82 @@ func Test_format_error(t *testing.T) {
 	_, err := Format(format_error_only_left_brace, fmt_data)
 	if err == nil {
 		t.Error("Test_format_error [format_error_only_left_brace] should throw error ")
+		t.FailNow()
 	}
 	fmt.Println("Test_format_error [format_error_only_left_brace] throw error", err.Error())
 
 	_, err = Format(format_error_without_condition, fmt_data)
 	if err == nil {
 		t.Error("Test_format_error [format_error_without_condition] should throw error ")
+		t.FailNow()
 	}
 	fmt.Println("Test_format_error [format_error_without_condition] throw error", err.Error())
 
 	_, err = Format(format_error_only_right_brace, fmt_data)
 	if err == nil {
 		t.Error("Test_format_error [format_error_only_right_brace] should throw error ")
+		t.FailNow()
 	}
 	fmt.Println("Test_format_error [format_error_only_right_brace] throw error", err.Error())
 
 	_, err = Format(format_error_without_complete_format, fmt_data)
 	if err == nil {
 		t.Error("Test_format_error [format_error_without_complete_format] should throw error ")
+		t.FailNow()
 	}
 	fmt.Println("Test_format_error [format_error_without_complete_format] throw error", err.Error())
 
 	_, err = Format(format_error_index_out_of_range, fmt_data)
 	if err == nil {
 		t.Error("Test_format_error [format_error_index_out_of_range] should throw error ")
+		t.FailNow()
 	}
 	fmt.Println("Test_format_error [format_error_index_out_of_range] throw error", err.Error())
+}
+
+func Test_FormatTime(t *testing.T) {
+	current_time := time.Now()
+	res, err := Format(format_time_normal, current_time.Format(time.RFC1123Z))
+	if err != nil {
+		t.Error("Test_FormatTime throw error " + err.Error())
+	}
+	fmt.Println(res)
+
+	res, err = Format(format_time_short, current_time.Format(time.RFC1123Z))
+	if err != nil {
+		t.Error("Test_FormatTime throw error " + err.Error())
+	}
+	fmt.Println(res)
+
+	time_map := make(map[string]string)
+	time_map["day"] = current_time.Format(time.RFC1123Z)
+	res, err = FormatMap(format_time_map, &time_map)
+	if err != nil {
+		t.Error("Test_FormatTime throw error " + err.Error())
+	}
+	fmt.Println(res)
+}
+
+func Test_FormatTimeError(t *testing.T) {
+	//did not come out a way to validate time format...
+	current_time := time.Now()
+	res, err := Format(format_time_error_format, current_time.Format(time.RFC1123Z))
+	if err != nil {
+		t.Error("Test_FormatTimeError throw error " + err.Error())
+	}
+	fmt.Println(res)
+
+	res, err = Format(format_time_error_format_lost, current_time.Format(time.RFC1123Z))
+	if err != nil {
+		t.Error("Test_FormatTimeError throw error " + err.Error())
+	}
+	fmt.Println(res)
+
+	res, err = Format(format_time_error_format_wrong, current_time.Format(time.RFC1123Z))
+	if err != nil {
+		t.Error("Test_FormatTimeError throw error " + err.Error())
+	}
+	fmt.Println(res)
 }
 
 //------------------------------------------//

@@ -12,6 +12,7 @@ const (
 	INPUT_INDEX_OUT_OF_RANGE  = "string [{0}] format count did not match args length"
 	INPUT_DATA_ERROR          = "args type [{0}] is not available, expect type is Struct"
 	INPUT_DATA_KEY_NOT_EXISTS = "string [{0}] format could not found key [{1}] in args"
+	INPUT_TIME_FORMAT_ERROR   = "time format [{0}] is not available"
 )
 
 //handle unify error message
@@ -22,52 +23,61 @@ func FormatError(errinfo string, formatter ...string) error {
 
 //not complete
 func get_reflect_data(t *reflect.Type, v *reflect.Value) map[string]string {
-	kind := (*t).Kind()
+
 	typ := *t
 	val := *v
+	kind := typ.Kind()
 	args_map := make(map[string]string)
+
 	if kind == reflect.Ptr {
-		typ = (*t).Elem()
-		val = (*v).Elem()
+		//handle Ptr Type
+		typ = typ.Elem()
+		val = val.Elem()
+		kind = typ.Kind()
 	}
-	kind = typ.Kind()
+
 	if kind != reflect.Struct {
 		return args_map
 	}
+
 	for i := 0; i < typ.NumField(); i++ {
 		name := typ.Field(i).Name
-		value_ref := val.Field(i)
+		field_value := val.Field(i)
 		var value string
 
-		t_field := value_ref.Type()
-		if t_kind := t_field.Kind(); t_kind == reflect.Ptr {
-			t_field = t_field.Elem()
+		field_type := field_value.Type()
+		field_kind := field_type.Kind()
+
+		if field_kind == reflect.Ptr {
+			field_type = field_type.Elem()
+			field_kind = field_type.Kind()
+			field_value = field_value.Elem()
 		}
 
-		switch t_field.Kind() {
-		case reflect.Int, reflect.Int8, reflect.Int32, reflect.Int64:
-			value = strconv.FormatInt(value_ref.Int(), 10)
-		case reflect.Float32, reflect.Float64:
-			value = strconv.FormatFloat(value_ref.Float(), 'e', 2, 32)
-		case reflect.Bool:
-			value = strconv.FormatBool(value_ref.Bool())
-		case reflect.Uint, reflect.Uint8, reflect.Uint32, reflect.Uint64:
-			value = strconv.FormatUint(value_ref.Uint(), 10)
-		case reflect.Struct:
-			resmap := get_reflect_data(&t_field, &value_ref)
-			for k, v := range resmap {
-				args_map[k] = v
-			}
-		default:
-			{
-				switch t_field.String() {
-				case "time.Time":
-					//todo : support self-def time format here
-					value = value_ref.Interface().(time.Time).Format("2006-01-02 15:04:05")
-				default:
-					//todo : support recusively get fields here
-					value = value_ref.String()
+		if field_type.String() == "time.Time" {
+			//handle time in a special way (don't handle as a struct)
+			//convert to RFC1123Z as a default format(which will not lost too much information)
+			value = field_value.Interface().(time.Time).Format(time.RFC1123Z)
+		} else {
+			switch field_kind {
+			case reflect.Int, reflect.Int8, reflect.Int32, reflect.Int64:
+				//decimalism for int convert
+				value = strconv.FormatInt(field_value.Int(), 10)
+			case reflect.Float32, reflect.Float64:
+				//point = 2,bit size = 32
+				value = strconv.FormatFloat(field_value.Float(), 'e', 2, 32)
+			case reflect.Bool:
+				value = strconv.FormatBool(field_value.Bool())
+			case reflect.Uint, reflect.Uint8, reflect.Uint32, reflect.Uint64:
+				value = strconv.FormatUint(field_value.Uint(), 10)
+			case reflect.Struct:
+				//recusively get struct data here
+				resmap := get_reflect_data(&field_type, &field_value)
+				for k, v := range resmap {
+					args_map[k] = v
 				}
+			default:
+				value = field_value.String()
 			}
 		}
 
@@ -83,6 +93,7 @@ func FormatData(str string, args interface{}) (string, error) {
 	}
 	args_type := reflect.TypeOf(args)
 	args_value := reflect.ValueOf(args)
+
 	args_map := get_reflect_data(&args_type, &args_value)
 	return FormatMap(str, &args_map)
 }
@@ -219,19 +230,64 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 			pos++
 		}
 
+		//get time format after :
+		var timeFormatter []byte
+		if ch == ':' {
+			pos++
+			for {
+				if pos == length {
+					return str, FormatError(INPUT_STR_ERROR, str)
+				}
+
+				ch = str[pos]
+				pos++
+
+				if ch == '{' {
+					//escape char for {{
+					if pos < length && str[pos] == '{' {
+						pos++
+					} else {
+						return str, FormatError(INPUT_STR_ERROR, str)
+					}
+				}
+
+				//escape char for }}
+				if ch == '}' {
+					if pos < length && str[pos] == '}' {
+						pos++
+					} else {
+						pos--
+						break
+					}
+				}
+
+				timeFormatter = append(timeFormatter, ch)
+			}
+		}
+
 		//already handle {number1,number2 , should get } here
 		if ch != '}' {
 			return str, FormatError(INPUT_STR_ERROR, str)
 		}
+		pos++
 
-		//if args map did not exists key, do nothing
+		//if args map did not exists key
 		if _, ok := (*args)[string(key)]; !ok {
 			return str, FormatError(INPUT_DATA_KEY_NOT_EXISTS, str, string(key))
 		}
 
-		arg := (*args)[string(key)]
+		arg := []byte((*args)[string(key)])
 
-		pos++
+		if len(timeFormatter) > 0 {
+			t_arg, err := time.Parse(time.RFC1123Z, string(arg))
+			if err == nil {
+				arg = []byte(t_arg.Format(string(timeFormatter)))
+				//todo : should validate time format is legal or not
+			} else {
+				return str, FormatError(INPUT_TIME_FORMAT_ERROR, string(timeFormatter))
+			}
+		}
+
 		pad := int(width) - len(arg)
 
 		//leftPad
@@ -394,13 +450,59 @@ func Format(str string, args ...string) (string, error) {
 			pos++
 		}
 
+		//get time format after :
+		var timeFormatter []byte
+		if ch == ':' {
+			pos++
+			for {
+				if pos == length {
+					return str, FormatError(INPUT_STR_ERROR, str)
+				}
+
+				ch = str[pos]
+				pos++
+
+				if ch == '{' {
+					//escape char for {{
+					if pos < length && str[pos] == '{' {
+						pos++
+					} else {
+						return str, FormatError(INPUT_STR_ERROR, str)
+					}
+				}
+
+				//escape char for }}
+				if ch == '}' {
+					if pos < length && str[pos] == '}' {
+						pos++
+					} else {
+						pos--
+						break
+					}
+				}
+
+				timeFormatter = append(timeFormatter, ch)
+			}
+		}
+
 		//already handle {number1,number2 , should get } here
 		if ch != '}' {
 			return str, FormatError(INPUT_STR_ERROR, str)
 		}
-
-		arg := []byte(args[index])
 		pos++
+
+		//format time here
+		arg := []byte(args[index])
+
+		if len(timeFormatter) > 0 {
+			t_arg, err := time.Parse(time.RFC1123Z, string(arg))
+			if err == nil {
+				arg = []byte(t_arg.Format(string(timeFormatter)))
+			} else {
+				return str, FormatError(INPUT_TIME_FORMAT_ERROR, string(timeFormatter))
+			}
+		}
+
 		pad := int(width) - len(arg)
 
 		//leftPad
