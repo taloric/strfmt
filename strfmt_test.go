@@ -64,43 +64,43 @@ func TestMain(m *testing.M) {
 	fmt.Println("----Test Main End----")
 }
 
-func Test_format(t *testing.T) {
-	res, err := format(format_today, "wonderful")
+func Test_Format(t *testing.T) {
+	res, err := Format(format_today, "wonderful")
 	if err != nil {
 		t.Error("test_format throw error " + err.Error())
 	}
 	fmt.Println(res)
 
-	res, err = format(format_today, "bad")
+	res, err = Format(format_today, "bad")
 	if err != nil {
 		t.Error("Test_format throw error " + err.Error())
 	}
 	fmt.Println(res)
 
-	res, err = format(format_today_rightpad, "wonderful")
+	res, err = Format(format_today_rightpad, "wonderful")
 	if err != nil {
 		t.Error("Test_format throw error " + err.Error())
 	}
 	fmt.Println(res)
 
-	res, err = format(format_today_leftpad, "wonderful")
+	res, err = Format(format_today_leftpad, "wonderful")
 	if err != nil {
 		t.Error("Test_format throw error " + err.Error())
 	}
 	fmt.Println(res)
 }
 
-func Test_format_map(t *testing.T) {
+func Test_FormatMap(t *testing.T) {
 	args := make(map[string]string)
 	args["DayofWeek"] = time.Now().Weekday().String()
-	res, err := format_map(format_today_info, &args)
+	res, err := FormatMap(format_today_info, &args)
 	if err != nil {
-		t.Error("Test_format_map throw error " + err.Error())
+		t.Error("Test_FormatMap throw error " + err.Error())
 	}
 	fmt.Println(res)
 }
 
-func Test_format_map_2(t *testing.T) {
+func Test_FormatMap_2(t *testing.T) {
 	args := make(map[string]string)
 	time_now := time.Now()
 	args["year"] = strconv.FormatInt(int64(time_now.Year()), 10)
@@ -110,23 +110,23 @@ func Test_format_map_2(t *testing.T) {
 	args["minute"] = strconv.FormatInt(int64(time_now.Minute()), 10)
 	args["seconds"] = strconv.FormatInt(int64(time_now.Second()), 10)
 
-	res, err := format_map(format_date, &args)
+	res, err := FormatMap(format_date, &args)
 	if err != nil {
-		t.Error("Test_format_map_2 throw error " + err.Error())
+		t.Error("Test_FormatMap_2 throw error " + err.Error())
 	}
 	fmt.Println(res)
 }
 
-func Test_format_data(t *testing.T) {
-	res, err := format_data(format_people, g_people)
+func Test_FormatData(t *testing.T) {
+	res, err := FormatData(format_people, g_people)
 	if err != nil {
-		t.Error("Test_format_data throw error " + err.Error())
+		t.Error("Test_FormatData throw error " + err.Error())
 	}
 	fmt.Println(res)
 }
 
 func Test_format_sub_data(t *testing.T) {
-	res, err := format_data(format_student, g_student)
+	res, err := FormatData(format_student, g_student)
 	if err != nil {
 		t.Error("Test_format_sub_data throw error " + err.Error())
 	}
@@ -136,31 +136,31 @@ func Test_format_sub_data(t *testing.T) {
 func Test_format_error(t *testing.T) {
 
 	fmt_data := "wonderful"
-	_, err := format(format_error_only_left_brace, fmt_data)
+	_, err := Format(format_error_only_left_brace, fmt_data)
 	if err == nil {
 		t.Error("Test_format_error [format_error_only_left_brace] should throw error ")
 	}
 	fmt.Println("Test_format_error [format_error_only_left_brace] throw error", err.Error())
 
-	_, err = format(format_error_without_condition, fmt_data)
+	_, err = Format(format_error_without_condition, fmt_data)
 	if err == nil {
 		t.Error("Test_format_error [format_error_without_condition] should throw error ")
 	}
 	fmt.Println("Test_format_error [format_error_without_condition] throw error", err.Error())
 
-	_, err = format(format_error_only_right_brace, fmt_data)
+	_, err = Format(format_error_only_right_brace, fmt_data)
 	if err == nil {
 		t.Error("Test_format_error [format_error_only_right_brace] should throw error ")
 	}
 	fmt.Println("Test_format_error [format_error_only_right_brace] throw error", err.Error())
 
-	_, err = format(format_error_without_complete_format, fmt_data)
+	_, err = Format(format_error_without_complete_format, fmt_data)
 	if err == nil {
 		t.Error("Test_format_error [format_error_without_complete_format] should throw error ")
 	}
 	fmt.Println("Test_format_error [format_error_without_complete_format] throw error", err.Error())
 
-	_, err = format(format_error_index_out_of_range, fmt_data)
+	_, err = Format(format_error_index_out_of_range, fmt_data)
 	if err == nil {
 		t.Error("Test_format_error [format_error_index_out_of_range] should throw error ")
 	}
@@ -171,8 +171,8 @@ func Test_format_error(t *testing.T) {
 //           Benchmark Test Below           //
 //------------------------------------------//
 
-func Benchmark_format(b *testing.B) {
-	_, err := format(format_today, "wonderful")
+func Benchmark_Format(b *testing.B) {
+	_, err := Format(format_today, "wonderful")
 	if err != nil {
 		b.Error("test_format throw error " + err.Error())
 		return
@@ -180,7 +180,7 @@ func Benchmark_format(b *testing.B) {
 	//fmt.Println(res)
 }
 
-func Benchmark_format_map(b *testing.B) {
+func Benchmark_FormatMap(b *testing.B) {
 	args := make(map[string]string)
 	//Today is {year}-{month}-{day},current time is {hour}-{minute}-{seconds}
 	time_now := time.Now()
@@ -191,17 +191,17 @@ func Benchmark_format_map(b *testing.B) {
 	args["minute"] = strconv.FormatInt(int64(time_now.Minute()), 10)
 	args["seconds"] = strconv.FormatInt(int64(time_now.Second()), 10)
 
-	_, err := format_map(format_date, &args)
+	_, err := FormatMap(format_date, &args)
 	if err != nil {
-		b.Error("Test_format_map_2 throw error " + err.Error())
+		b.Error("Test_FormatMap_2 throw error " + err.Error())
 	}
 	//fmt.Println(res)
 }
 
-func Benchmark_format_data(b *testing.B) {
-	_, err := format_data(format_people, g_people)
+func Benchmark_FormatData(b *testing.B) {
+	_, err := FormatData(format_people, g_people)
 	if err != nil {
-		b.Error("Test_format_data throw error " + err.Error())
+		b.Error("Test_FormatData throw error " + err.Error())
 	}
 	//fmt.Println(res)
 }
