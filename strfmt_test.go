@@ -27,7 +27,7 @@ const (
 	format_time_short  = "Current Time is {0:3:04PM}"
 	format_time_map    = "Current Time is {day:2006-01-02 15:04:05 Mon}"
 
-	//maybe should support this format?
+	//maybe should support yyyy-mm format?(convert it to golang time format)
 	format_time_error_format       = "Current Time is {0:yyyy-mm}"
 	format_time_error_format_lost  = "Current Time is {0:}"
 	format_time_error_format_wrong = "Current Time is {0:2003-02-02}"
@@ -205,7 +205,7 @@ func Test_FormatTime(t *testing.T) {
 }
 
 func Test_FormatTimeError(t *testing.T) {
-	//did not come out a way to validate time format...
+	//todo: should be able to recognize any format of time
 	current_time := time.Now()
 	res, err := Format(format_time_error_format, current_time.Format(time.RFC1123Z))
 	if err != nil {
@@ -241,7 +241,6 @@ func Benchmark_Format(b *testing.B) {
 
 func Benchmark_FormatMap(b *testing.B) {
 	args := make(map[string]string)
-	//Today is {year}-{month}-{day},current time is {hour}-{minute}-{seconds}
 	time_now := time.Now()
 	args["year"] = strconv.FormatInt(int64(time_now.Year()), 10)
 	args["month"] = strconv.FormatInt(int64(time_now.Month()), 10)
@@ -254,7 +253,6 @@ func Benchmark_FormatMap(b *testing.B) {
 	if err != nil {
 		b.Error("Test_FormatMap_2 throw error " + err.Error())
 	}
-	//fmt.Println(res)
 }
 
 func Benchmark_FormatData(b *testing.B) {
@@ -262,5 +260,4 @@ func Benchmark_FormatData(b *testing.B) {
 	if err != nil {
 		b.Error("Test_FormatData throw error " + err.Error())
 	}
-	//fmt.Println(res)
 }

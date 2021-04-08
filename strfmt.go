@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+//error message
 const (
 	INPUT_STR_ERROR           = "string [{0}] format is not available"
 	INPUT_INDEX_OUT_OF_RANGE  = "string [{0}] format count did not match args length"
@@ -16,12 +17,12 @@ const (
 )
 
 //handle unify error message
-func FormatError(errinfo string, formatter ...string) error {
+func format_error(errinfo string, formatter ...string) error {
 	fmtResult, _ := Format(errinfo, formatter...)
 	return errors.New(fmtResult)
 }
 
-//not complete
+//get sub struct data
 func get_reflect_data(t *reflect.Type, v *reflect.Value) map[string]string {
 
 	typ := *t
@@ -30,7 +31,7 @@ func get_reflect_data(t *reflect.Type, v *reflect.Value) map[string]string {
 	args_map := make(map[string]string)
 
 	if kind == reflect.Ptr {
-		//handle Ptr Type
+		//get real type in Pointer
 		typ = typ.Elem()
 		val = val.Elem()
 		kind = typ.Kind()
@@ -49,13 +50,14 @@ func get_reflect_data(t *reflect.Type, v *reflect.Value) map[string]string {
 		field_kind := field_type.Kind()
 
 		if field_kind == reflect.Ptr {
+			//get field type in Pointer
 			field_type = field_type.Elem()
 			field_kind = field_type.Kind()
 			field_value = field_value.Elem()
 		}
 
 		if field_type.String() == "time.Time" {
-			//handle time in a special way (don't handle as a struct)
+			//format time first
 			//convert to RFC1123Z as a default format(which will not lost too much information)
 			value = field_value.Interface().(time.Time).Format(time.RFC1123Z)
 		} else {
@@ -76,7 +78,7 @@ func get_reflect_data(t *reflect.Type, v *reflect.Value) map[string]string {
 				for k, v := range resmap {
 					args_map[k] = v
 				}
-			default:
+			default: //normal type
 				value = field_value.String()
 			}
 		}
@@ -86,7 +88,10 @@ func get_reflect_data(t *reflect.Type, v *reflect.Value) map[string]string {
 	return args_map
 }
 
-//format string by reflection structs
+//Format Strings with struct type data
+//	str:target string, args:struct
+//	if args is nil or len(str) is zero, return itself
+//	string format should be like : some description{field}
 func FormatData(str string, args interface{}) (string, error) {
 	if len(str) == 0 || args == nil {
 		return str, nil
@@ -98,7 +103,10 @@ func FormatData(str string, args interface{}) (string, error) {
 	return FormatMap(str, &args_map)
 }
 
-//format string key like {key} {key2}
+//Format Strings with a map[string]string
+//	str:target string, args:map
+//	if args is nil or len(str) is zero, return itself
+//	string format should be like : some description{field}
 func FormatMap(str string, args *map[string]string) (string, error) {
 	if len(str) == 0 || len(*args) == 0 {
 		return str, nil
@@ -124,7 +132,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 				if pos < length && str[pos] == '}' {
 					pos++
 				} else {
-					return str, FormatError(INPUT_STR_ERROR, str)
+					return str, format_error(INPUT_STR_ERROR, str)
 				}
 			}
 
@@ -146,11 +154,11 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 		}
 		pos++
 		if pos == length {
-			return str, FormatError(INPUT_STR_ERROR, str)
+			return str, format_error(INPUT_STR_ERROR, str)
 		}
 
 		if ch = str[pos]; ch < 'A' || (ch > 'Z' && (ch < 'a' || ch > 'z')) {
-			return str, FormatError(INPUT_STR_ERROR, str)
+			return str, format_error(INPUT_STR_ERROR, str)
 		}
 
 		// get numbers in {}
@@ -159,7 +167,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 			key = append(key, ch)
 			pos++
 			if pos == length {
-				return str, FormatError(INPUT_STR_ERROR, str)
+				return str, format_error(INPUT_STR_ERROR, str)
 			}
 			ch = str[pos]
 
@@ -191,7 +199,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 			}
 
 			if pos == length {
-				return str, FormatError(INPUT_STR_ERROR, str)
+				return str, format_error(INPUT_STR_ERROR, str)
 			}
 
 			ch = str[pos]
@@ -199,13 +207,13 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 				leftJustify = true
 				pos++
 				if pos == length {
-					return str, FormatError(INPUT_STR_ERROR, str)
+					return str, format_error(INPUT_STR_ERROR, str)
 				}
 				ch = str[pos]
 			}
 
 			if ch < '0' || ch > '9' {
-				return str, FormatError(INPUT_STR_ERROR, str)
+				return str, format_error(INPUT_STR_ERROR, str)
 			}
 
 			//get numbers after ','
@@ -213,7 +221,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 				width = width*10 + ch - '0'
 				pos++
 				if pos == length {
-					return str, FormatError(INPUT_STR_ERROR, str)
+					return str, format_error(INPUT_STR_ERROR, str)
 				}
 				ch = str[pos]
 
@@ -236,7 +244,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 			pos++
 			for {
 				if pos == length {
-					return str, FormatError(INPUT_STR_ERROR, str)
+					return str, format_error(INPUT_STR_ERROR, str)
 				}
 
 				ch = str[pos]
@@ -247,7 +255,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 					if pos < length && str[pos] == '{' {
 						pos++
 					} else {
-						return str, FormatError(INPUT_STR_ERROR, str)
+						return str, format_error(INPUT_STR_ERROR, str)
 					}
 				}
 
@@ -267,13 +275,13 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 
 		//already handle {number1,number2 , should get } here
 		if ch != '}' {
-			return str, FormatError(INPUT_STR_ERROR, str)
+			return str, format_error(INPUT_STR_ERROR, str)
 		}
 		pos++
 
 		//if args map did not exists key
 		if _, ok := (*args)[string(key)]; !ok {
-			return str, FormatError(INPUT_DATA_KEY_NOT_EXISTS, str, string(key))
+			return str, format_error(INPUT_DATA_KEY_NOT_EXISTS, str, string(key))
 		}
 
 		arg := []byte((*args)[string(key)])
@@ -282,9 +290,9 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 			t_arg, err := time.Parse(time.RFC1123Z, string(arg))
 			if err == nil {
 				arg = []byte(t_arg.Format(string(timeFormatter)))
-				//todo : should validate time format is legal or not
+				//todo : should validate time format if is illegal
 			} else {
-				return str, FormatError(INPUT_TIME_FORMAT_ERROR, string(timeFormatter))
+				return str, format_error(INPUT_TIME_FORMAT_ERROR, string(timeFormatter))
 			}
 		}
 
@@ -311,7 +319,10 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 	return string(result), nil
 }
 
-//format numbers matching like {0} {1}
+//Format Strings with string args
+//	str:target string, args: strings
+//	if args is nil or len(str) is zero, return itself
+//	string format should be like : some description{0}{1}
 func Format(str string, args ...string) (string, error) {
 	if len(str) == 0 || len(args) == 0 {
 		return str, nil
@@ -338,7 +349,7 @@ func Format(str string, args ...string) (string, error) {
 				if pos < length && str[pos] == '}' {
 					pos++
 				} else {
-					return str, FormatError(INPUT_STR_ERROR, str)
+					return str, format_error(INPUT_STR_ERROR, str)
 				}
 			}
 
@@ -360,11 +371,11 @@ func Format(str string, args ...string) (string, error) {
 		}
 		pos++
 		if pos == length {
-			return str, FormatError(INPUT_STR_ERROR, str)
+			return str, format_error(INPUT_STR_ERROR, str)
 		}
 
 		if ch = str[pos]; ch < '0' || ch > '9' {
-			return str, FormatError(INPUT_STR_ERROR, str)
+			return str, format_error(INPUT_STR_ERROR, str)
 		}
 
 		// get numbers in {}
@@ -373,7 +384,7 @@ func Format(str string, args ...string) (string, error) {
 			index = index*10 + ch - '0'
 			pos++
 			if pos == length {
-				return str, FormatError(INPUT_STR_ERROR, str)
+				return str, format_error(INPUT_STR_ERROR, str)
 			}
 			ch = str[pos]
 
@@ -384,7 +395,7 @@ func Format(str string, args ...string) (string, error) {
 		}
 
 		if int(index) >= len(args) {
-			return str, FormatError(INPUT_INDEX_OUT_OF_RANGE, str)
+			return str, format_error(INPUT_INDEX_OUT_OF_RANGE, str)
 		}
 
 		//remove all space
@@ -409,7 +420,7 @@ func Format(str string, args ...string) (string, error) {
 			}
 
 			if pos == length {
-				return str, FormatError(INPUT_STR_ERROR, str)
+				return str, format_error(INPUT_STR_ERROR, str)
 			}
 
 			ch = str[pos]
@@ -417,13 +428,13 @@ func Format(str string, args ...string) (string, error) {
 				leftJustify = true
 				pos++
 				if pos == length {
-					return str, FormatError(INPUT_STR_ERROR, str)
+					return str, format_error(INPUT_STR_ERROR, str)
 				}
 				ch = str[pos]
 			}
 
 			if ch < '0' || ch > '9' {
-				return str, FormatError(INPUT_STR_ERROR, str)
+				return str, format_error(INPUT_STR_ERROR, str)
 			}
 
 			//get numbers after ','
@@ -432,7 +443,7 @@ func Format(str string, args ...string) (string, error) {
 				width = width*10 + ch - '0'
 				pos++
 				if pos == length {
-					return str, FormatError(INPUT_STR_ERROR, str)
+					return str, format_error(INPUT_STR_ERROR, str)
 				}
 				ch = str[pos]
 
@@ -456,7 +467,7 @@ func Format(str string, args ...string) (string, error) {
 			pos++
 			for {
 				if pos == length {
-					return str, FormatError(INPUT_STR_ERROR, str)
+					return str, format_error(INPUT_STR_ERROR, str)
 				}
 
 				ch = str[pos]
@@ -467,7 +478,7 @@ func Format(str string, args ...string) (string, error) {
 					if pos < length && str[pos] == '{' {
 						pos++
 					} else {
-						return str, FormatError(INPUT_STR_ERROR, str)
+						return str, format_error(INPUT_STR_ERROR, str)
 					}
 				}
 
@@ -487,7 +498,7 @@ func Format(str string, args ...string) (string, error) {
 
 		//already handle {number1,number2 , should get } here
 		if ch != '}' {
-			return str, FormatError(INPUT_STR_ERROR, str)
+			return str, format_error(INPUT_STR_ERROR, str)
 		}
 		pos++
 
@@ -499,7 +510,7 @@ func Format(str string, args ...string) (string, error) {
 			if err == nil {
 				arg = []byte(t_arg.Format(string(timeFormatter)))
 			} else {
-				return str, FormatError(INPUT_TIME_FORMAT_ERROR, string(timeFormatter))
+				return str, format_error(INPUT_TIME_FORMAT_ERROR, string(timeFormatter))
 			}
 		}
 
