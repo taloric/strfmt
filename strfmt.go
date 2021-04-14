@@ -300,7 +300,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 
 		//leftPad
 		if !leftJustify && pad > 0 {
-			for j := 0; j <= pad; j++ {
+			for j := 0; j < pad; j++ {
 				result = append(result, ' ')
 			}
 		}
@@ -310,7 +310,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 
 		//rightPad
 		if leftJustify && pad > 0 {
-			for j := 0; j <= pad; j++ {
+			for j := 0; j < pad; j++ {
 				result = append(result, ' ')
 			}
 		}
@@ -518,7 +518,7 @@ func Format(str string, args ...string) (string, error) {
 
 		//leftPad
 		if !leftJustify && pad > 0 {
-			for j := 0; j <= pad; j++ {
+			for j := 0; j < pad; j++ {
 				result = append(result, ' ')
 			}
 		}
@@ -528,7 +528,7 @@ func Format(str string, args ...string) (string, error) {
 
 		//rightPad
 		if leftJustify && pad > 0 {
-			for j := 0; j <= pad; j++ {
+			for j := 0; j < pad; j++ {
 				result = append(result, ' ')
 			}
 		}
