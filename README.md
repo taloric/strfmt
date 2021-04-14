@@ -100,15 +100,15 @@ func main() {
 	format_time_map := "Current Time is {day:2006-01-02 15:04:05 Mon}"
 
     //use time.RFC1123Z to format a time string right now, maybe transform to another way not before long
-	res, err := Format(format_time_normal, current_time.Format(time.RFC1123Z))
+	res, err := strfmt.Format(format_time_normal, current_time.Format(time.RFC1123Z))
 	fmt.Println(res)
 
-	res, err = Format(format_time_short, current_time.Format(time.RFC1123Z))
+	res, err = strfmt.Format(format_time_short, current_time.Format(time.RFC1123Z))
 	fmt.Println(res)
 
 	time_map := make(map[string]string)
 	time_map["day"] = current_time.Format(time.RFC1123Z)
-	res, err = FormatMap(format_time_map, &time_map)
+	res, err = strfmt.FormatMap(format_time_map, &time_map)
 
 	fmt.Println(res)
 }
