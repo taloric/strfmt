@@ -280,9 +280,10 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 		pos++
 
 		//if args map did not exists key
-		if _, ok := (*args)[string(key)]; !ok {
-			return str, format_error(INPUT_DATA_KEY_NOT_EXISTS, str, string(key))
-		}
+		//not match means not match , dont throw any error
+		// if _, ok := (*args)[string(key)]; !ok {
+		// 	return str, format_error(INPUT_DATA_KEY_NOT_EXISTS, str, string(key))
+		// }
 
 		arg := []byte((*args)[string(key)])
 
