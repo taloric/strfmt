@@ -14,7 +14,7 @@ const (
 	format_today          = "Today is a {0} day"
 	format_today_rightpad = "Today is a {0,-20} day"
 	format_today_leftpad  = "Today is a {0,20} day"
-	format_today_info     = "Today is {DayofWeek}"
+	format_today_info     = "Today is {NotMapTest1} {DayofWeek} {NotMap_Test} {NotMap}"
 	format_date           = "Today is {year}-{month}-{day},current time is {hour}-{minute}-{seconds}"
 
 	format_error_only_left_brace         = "Today is { Day"

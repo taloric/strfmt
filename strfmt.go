@@ -161,7 +161,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 			return str, format_error(INPUT_STR_ERROR, str)
 		}
 
-		// get numbers in {}
+		// get keys in {}
 		var key []byte
 		for { //(ch >= '0' && ch <= '9' && index < 1000000)
 			key = append(key, ch)
@@ -172,7 +172,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 			ch = str[pos]
 
 			//escape loop
-			if ch < 'A' || (ch > 'Z' && (ch < 'a' || ch > 'z')) {
+			if ch < '0' || (ch > '9' && ch < 'A') || (ch > 'Z' && ch != '_' && (ch < 'a' || ch > 'z')) {
 				break
 			}
 		}
@@ -281,9 +281,13 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 
 		//if args map did not exists key
 		//not match means not match , dont throw any error
-		// if _, ok := (*args)[string(key)]; !ok {
-		// 	return str, format_error(INPUT_DATA_KEY_NOT_EXISTS, str, string(key))
-		// }
+		if _, ok := (*args)[string(key)]; !ok {
+			//it needs to restore {not match key} in text
+			result = append(result, '{')
+			result = append(result, string(key)...)
+			result = append(result, '}')
+			//return str, format_error(INPUT_DATA_KEY_NOT_EXISTS, str, string(key))
+		}
 
 		arg := []byte((*args)[string(key)])
 
