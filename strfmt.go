@@ -142,6 +142,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 					pos++
 				} else {
 					pos--
+					//escape loop
 					break
 				}
 			}
@@ -157,8 +158,13 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 			return str, format_error(INPUT_STR_ERROR, str)
 		}
 
-		if ch = str[pos]; ch < 'A' || (ch > 'Z' && (ch < 'a' || ch > 'z')) {
-			return str, format_error(INPUT_STR_ERROR, str)
+		if ch = str[pos]; ch < '0' || (ch > '9' && ch < 'A') || (ch > 'Z' && ch != '_' && (ch < 'a' || ch > 'z')) {
+			//detectd '{' but not detectd any legal key here
+			result = append(result, '{')
+			result = append(result, ch)
+			continue
+			//escape match instead of return
+			//return str, format_error(INPUT_STR_ERROR, str)
 		}
 
 		// get keys in {}
@@ -380,7 +386,10 @@ func Format(str string, args ...string) (string, error) {
 		}
 
 		if ch = str[pos]; ch < '0' || ch > '9' {
-			return str, format_error(INPUT_STR_ERROR, str)
+			result = append(result, '{')
+			result = append(result, ch)
+			continue
+			//return str, format_error(INPUT_STR_ERROR, str)
 		}
 
 		// get numbers in {}

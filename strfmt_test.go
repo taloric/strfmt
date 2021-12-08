@@ -146,11 +146,11 @@ func Test_format_error(t *testing.T) {
 
 	fmt_data := "wonderful"
 	_, err := Format(format_error_only_left_brace, fmt_data)
-	if err == nil {
-		t.Error("Test_format_error [format_error_only_left_brace] should throw error ")
+	if err != nil {
+		t.Error("Test_format_error [format_error_only_left_brace] should not throw error ")
 		t.FailNow()
 	}
-	fmt.Println("Test_format_error [format_error_only_left_brace] throw error", err.Error())
+	fmt.Println("Test_format_error [format_error_only_left_brace] not throwing error")
 
 	_, err = Format(format_error_without_condition, fmt_data)
 	if err == nil {
