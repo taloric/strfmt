@@ -126,6 +126,20 @@ func Test_FormatMap_2(t *testing.T) {
 	fmt.Println(res)
 }
 
+func Test_FormatMap_3(t *testing.T) {
+	args := make(map[string]string)
+	str := `【{UserName}】修改工单评论，评论如下：
+	-------------------------------------------------------------
+	{}
+	-------------------------------------------------------------
+	工单链接：{OrderDetailUrl}`
+	args["UserName"] = "123"
+	args["OrderDetailUrl"] = "456"
+	res, err := FormatMap(str, &args)
+	fmt.Println(res)
+	fmt.Println(err)
+}
+
 func Test_FormatData(t *testing.T) {
 	res, err := FormatData(format_people, g_people)
 	if err != nil {
@@ -153,18 +167,18 @@ func Test_format_error(t *testing.T) {
 	fmt.Println("Test_format_error [format_error_only_left_brace] not throwing error")
 
 	_, err = Format(format_error_without_condition, fmt_data)
-	if err == nil {
-		t.Error("Test_format_error [format_error_without_condition] should throw error ")
+	if err != nil {
+		t.Error("Test_format_error [format_error_without_condition] should not throw error ")
 		t.FailNow()
 	}
-	fmt.Println("Test_format_error [format_error_without_condition] throw error", err.Error())
+	fmt.Println("Test_format_error [format_error_without_condition] not throwing error")
 
 	_, err = Format(format_error_only_right_brace, fmt_data)
-	if err == nil {
-		t.Error("Test_format_error [format_error_only_right_brace] should throw error ")
+	if err != nil {
+		t.Error("Test_format_error [format_error_only_right_brace] should not throw error ")
 		t.FailNow()
 	}
-	fmt.Println("Test_format_error [format_error_only_right_brace] throw error", err.Error())
+	fmt.Println("Test_format_error [format_error_only_right_brace] not throwing error")
 
 	_, err = Format(format_error_without_complete_format, fmt_data)
 	if err == nil {

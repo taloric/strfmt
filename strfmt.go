@@ -132,7 +132,9 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 				if pos < length && str[pos] == '}' {
 					pos++
 				} else {
-					return str, format_error(INPUT_STR_ERROR, str)
+					result = append(result, ch, str[pos])
+					continue
+					//return str, format_error(INPUT_STR_ERROR, str)
 				}
 			}
 
@@ -160,8 +162,7 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 
 		if ch = str[pos]; ch < '0' || (ch > '9' && ch < 'A') || (ch > 'Z' && ch != '_' && (ch < 'a' || ch > 'z')) {
 			//detectd '{' but not detectd any legal key here
-			result = append(result, '{')
-			result = append(result, ch)
+			result = append(result, '{', ch)
 			continue
 			//escape match instead of return
 			//return str, format_error(INPUT_STR_ERROR, str)
@@ -281,7 +282,10 @@ func FormatMap(str string, args *map[string]string) (string, error) {
 
 		//already handle {number1,number2 , should get } here
 		if ch != '}' {
-			return str, format_error(INPUT_STR_ERROR, str)
+			result = append(result, '{')
+			result = append(result, string(key)...)
+			continue
+			//return str, format_error(INPUT_STR_ERROR, str)
 		}
 		pos++
 
@@ -360,7 +364,9 @@ func Format(str string, args ...string) (string, error) {
 				if pos < length && str[pos] == '}' {
 					pos++
 				} else {
-					return str, format_error(INPUT_STR_ERROR, str)
+					result = append(result, ch, str[pos])
+					continue
+					//return str, format_error(INPUT_STR_ERROR, str)
 				}
 			}
 
@@ -386,8 +392,7 @@ func Format(str string, args ...string) (string, error) {
 		}
 
 		if ch = str[pos]; ch < '0' || ch > '9' {
-			result = append(result, '{')
-			result = append(result, ch)
+			result = append(result, '{', ch)
 			continue
 			//return str, format_error(INPUT_STR_ERROR, str)
 		}
@@ -512,7 +517,10 @@ func Format(str string, args ...string) (string, error) {
 
 		//already handle {number1,number2 , should get } here
 		if ch != '}' {
-			return str, format_error(INPUT_STR_ERROR, str)
+			result = append(result, '{')
+			result = append(result, string(index)...)
+			continue
+			//return str, format_error(INPUT_STR_ERROR, str)
 		}
 		pos++
 
